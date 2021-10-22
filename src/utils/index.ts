@@ -92,3 +92,11 @@ export function toDecimalValue(amount: number | string, decimals: number): BN {
 
   return new BN(wei.toString(10), 10);
 }
+
+export function isEthereumAddress(address: string) {
+  return address.length === 42;
+}
+
+export function sleep(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}

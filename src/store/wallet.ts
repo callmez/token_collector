@@ -1,19 +1,22 @@
-import { toDecimalValue } from "@/utils";
+import { isEthereumAddress, toDecimalValue } from "@/utils";
 import { defineStore } from "pinia";
 import Web3 from "web3/dist/web3.min.js";
 import { contractCall, getAccounts, getERC20Contract, getWeb3 } from "../web3";
+
+export interface Token {
+  address: string;
+  contract: Web3.eth.Contract;
+  name: string;
+  symbol: string;
+  totalSupply: number;
+  decimals: number;
+}
 
 export interface WalletState {
   originalWeb3?: Web3;
   accounts: string[];
   tokens: {
-    [address: string]: {
-      contract: Web3.eth.Contract;
-      name: string;
-      symbol: string;
-      totalSupply: number;
-      decimals: number;
-    };
+    [address: string]: Token;
   };
 }
 
@@ -46,11 +49,28 @@ export const useWalletStore = defineStore({
 
       return this.accounts;
     },
+    async loadTokensByGuessString({ guessString }: { guessString: string }) {
+      const tokens: Token[] = [];
+
+      if (isEthereumAddress(guessString)) {
+        try {
+          const token = await this.loadToken({ address: guessString });
+
+          tokens.push(token);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      return tokens;
+    },
+
     async loadToken({ address, force }: { address: string; force?: boolean }) {
       if (!this.tokens[address] || force) {
         const contract = await getERC20Contract(address);
 
         this.tokens[address] = {
+          address,
           contract,
           name: await contract.methods.name().call(),
           symbol: await contract.methods.symbol().call(),

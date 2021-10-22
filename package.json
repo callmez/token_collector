@@ -7,8 +7,12 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.4.1",
+    "@heroicons/vue": "^1.0.4",
+    "@tailwindcss/forms": "^0.3.4",
     "buffer": "^6.0.3",
     "pinia": "^2.0.0-rc.13",
+    "tailwindcss": "^2.2.17",
     "vant": "^3.2.5",
     "vue": "^3.2.16",
     "vue-router": "^4.0.12",
@@ -20,7 +24,6 @@
     "autoprefixer": "^10.3.7",
     "hardhat": "^2.6.6",
     "postcss": "^8.3.10",
-    "tailwindcss": "^2.2.17",
     "typescript": "^4.4.3",
     "vite": "^2.6.4",
     "vue-tsc": "^0.3.0"

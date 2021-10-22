@@ -1,9 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="wrapper">
-    <router-view></router-view>
-  </div>
+  <router-view></router-view>
 </template>
 
 <style>
@@ -13,17 +11,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 body {
-  background-color: #f7f8fa;
-}
-.wrapper {
-  width: inherit;
-  margin-left: auto;
-  margin-right: auto;
-}
-@media screen and (min-width: 40px) {
-  .wrapper {
-    width: 375px;
-  }
+  background-color: rgba(229, 231, 235);
 }
 
 .section-title {
