@@ -51,52 +51,41 @@
                 归集Token
               </dt>
               <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                <button
-                  @click.stop="handleShowTokenSelectModal"
-                  type="button"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                  class="
-                    relative
-                    w-full
-                    bg-white
-                    border border-gray-300
-                    rounded-md
-                    shadow-sm
-                    pl-3
-                    pr-10
-                    py-2
-                    text-left
-                    cursor-default
-                    focus:outline-none
-                    focus:ring-1
-                    focus:ring-indigo-500
-                    focus:border-indigo-500
-                    sm:text-sm
-                  "
-                >
-                  <span class="flex items-center">
-                    <span class="block truncate">
-                      {{ form.tokenAddress }} &nbsp;
-                    </span>
-                  </span>
-                  <span
-                    v-if="selectedToken"
+                <div class="relative rounded-md shadow-sm">
+                  <input
+                    type="text"
+                    name="price"
+                    id="price"
                     class="
-                      ml-3
+                      focus:ring-indigo-500 focus:border-indigo-500
+                      block
+                      w-full
+                      pr-12
+                      sm:text-sm
+                      border-gray-300
+                      rounded-md
+                    "
+                    readonly
+                    @click.stop="handleShowTokenSelectModal"
+                    v-model="form.tokenAddress"
+                    placeholder="请输入归集Token地址"
+                  />
+                  <div
+                    class="
                       absolute
                       inset-y-0
                       right-0
                       flex
                       items-center
-                      pr-2
-                      pointer-events-none
+                      text-gray-500
                       font-bold
+                      px-4
                     "
                   >
                     {{ selectedToken?.name }}
-                  </span>
-                </button>
+                  </div>
+                </div>
+
                 <TransitionRoot
                   appear
                   :show="tokenSelectModalShow"
