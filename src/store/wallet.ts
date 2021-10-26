@@ -1,7 +1,12 @@
 import { isEthereumAddress, toDecimalValue } from "@/utils";
 import { defineStore } from "pinia";
 import Web3 from "web3/dist/web3.min.js";
-import { contractCall, getAccounts, getERC20Contract, getWeb3 } from "../web3";
+import {
+  contractCall,
+  getAccounts,
+  getERC20Contract,
+  getWeb3,
+} from "../utils/web3";
 
 export interface Token {
   address: string;
@@ -36,12 +41,19 @@ export const useWalletStore = defineStore({
     },
   },
   actions: {
+    async connectWallet(wallet: string) {
+      await this.loadAccounts();
+      return true;
+    },
     async loadWeb3() {
       if (!this.originalWeb3) {
         this.originalWeb3 = await getWeb3();
       }
 
       return this.originalWeb3;
+    },
+    async cleanAccounts() {
+      this.accounts = [];
     },
     async loadAccounts() {
       await this.loadWeb3();

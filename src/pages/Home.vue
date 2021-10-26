@@ -1,6 +1,6 @@
 <template>
   <NavBar :title="config.app.name" />
-  {{ form }}
+
   <main
     class="flex flex-col items-center justify-start flex-grow w-full h-full"
   >
@@ -71,15 +71,18 @@
                     placeholder="请输入归集Token地址"
                   />
                   <div
+                    v-if="selectedToken"
                     class="
+                      border-l border-gray-300
                       absolute
                       inset-y-0
                       right-0
                       flex
                       items-center
-                      text-gray-500
+                      justify-center
+                      text-center text-gray-500
                       font-bold
-                      px-4
+                      w-12
                     "
                   >
                     {{ selectedToken?.name }}
@@ -219,7 +222,17 @@
                 "
                 :disabled="loading['walletApprove']"
               >
-                <LoadingIcon v-if="loading['walletApprove']" />
+                <LoadingIcon
+                  class="
+                    absolute
+                    left-6
+                    flex
+                    items-center
+                    justify-center
+                    text-gray-300
+                  "
+                  v-if="loading['walletApprove']"
+                />
                 授权归集
               </button>
             </div>

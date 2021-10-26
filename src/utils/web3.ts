@@ -548,6 +548,15 @@ export const ERC20ABI = [
   },
 ];
 
+// TODO
+// export function isConnected() {
+//   return getProvider().isConnected() as boolean;
+// }
+
+export function hasConnectedAddress() {
+  return getProvider().selectedAddress;
+}
+
 export function getProvider() {
   if ((window as any).ethereum) {
     return (window as any).ethereum;
@@ -555,6 +564,10 @@ export function getProvider() {
     return (window as any).web3;
   }
   throw new Error("Can't detect web3.");
+}
+
+export async function getChainID() {
+  return getProvider().request({ method: "eth_chainId" }) as number;
 }
 
 let web3: Web3;
@@ -566,11 +579,19 @@ export async function getWeb3(): Promise<Web3> {
 }
 
 export async function getAccounts() {
-  return getProvider().request({ method: "eth_requestAccounts" });
+  return getProvider().request({ method: "eth_requestAccounts" }) as string[];
 }
 
-export async function onWalletEvent(eventName: string, callback) {
+export async function onEvent(eventName: string, callback) {
   getProvider().on(eventName, callback);
+}
+
+export function isMetaMask() {
+  return getProvider().isMetaMask as boolean;
+}
+
+export function isMetamaskUnlocked() {
+  return getProvider()._metamask.isUnlocked() as boolean;
 }
 
 export async function getERC20Contract(address: string) {

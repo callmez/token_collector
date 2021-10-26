@@ -34,6 +34,7 @@
           <div class="hidden sm:block sm:ml-6">
             <div class="flex space-x-4">
               <a
+                v-if="!activeAccount"
                 href="#"
                 class="
                   text-gray-300
@@ -45,12 +46,13 @@
                   text-sm
                   font-medium
                 "
-                @click.stop="walletConnectShow = !walletConnectShow"
+                @click.stop="handleShowWalletConnectModal"
               >
                 连接钱包
               </a>
 
               <a
+                v-else
                 href="#"
                 class="
                   text-gray-300
@@ -72,17 +74,80 @@
     </div>
   </nav>
 
-  <Modal v-model="walletConnectShow">
-    <WalletConnect />
-  </Modal>
+  <TransitionRoot appear :show="walletConnectModalShow" as="template">
+    <Dialog as="div" @close.stop="handleCloseWalletConnectModal">
+      <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="min-h-screen px-4 text-center">
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0"
+            enter-to="opacity-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100"
+            leave-to="opacity-0"
+          >
+            <DialogOverlay class="fixed inset-0 bg-black opacity-30" />
+          </TransitionChild>
+
+          <span class="inline-block h-screen align-middle" aria-hidden="true">
+            &#8203;
+          </span>
+
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <div
+              class="
+                inline-block
+                w-full
+                max-w-md
+                p-6
+                my-8
+                overflow-hidden
+                text-left
+                align-middle
+                transition-all
+                transform
+                bg-white
+                shadow-xl
+                rounded-2xl
+              "
+            >
+              <DialogTitle
+                as="h3"
+                class="text-lg font-medium leading-6 text-gray-900 mb-4"
+              >
+                选择钱包
+              </DialogTitle>
+
+              <WalletConnect @connected="handleCloseWalletConnectModal" />
+            </div>
+          </TransitionChild>
+        </div>
+      </div>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <script lang="ts" setup>
 import { ref, toRef, onMounted, computed } from "vue";
-import Modal from "./common/Modal.vue";
+import {
+  TransitionRoot,
+  TransitionChild,
+  Dialog,
+  DialogOverlay,
+  DialogTitle,
+} from "@headlessui/vue";
 import WalletConnect from "./WalletConnect.vue";
 import { useWalletStore } from "@/store";
-import { onWalletEvent } from "@/web3";
+import { hasConnectedAddress, onEvent } from "@/utils/web3";
 
 const props = withDefaults(
   defineProps<{
@@ -93,13 +158,28 @@ const props = withDefaults(
   }
 );
 
-const walletConnectShow = ref(false);
+const walletConnectModalShow = ref(false);
+const handleShowWalletConnectModal = () =>
+  (walletConnectModalShow.value = true);
+const handleCloseWalletConnectModal = () =>
+  (walletConnectModalShow.value = false);
 
 const walletStore = useWalletStore();
-walletStore.loadAccounts();
+
 onMounted(() => {
-  onWalletEvent("accountsChanged", () => walletStore.loadAccounts());
+  if (hasConnectedAddress()) {
+    walletStore.loadAccounts();
+  }
+
+  onEvent("accountsChanged", (accounts: string[]) => {
+    if (!accounts.length) {
+      return walletStore.cleanAccounts();
+    }
+
+    walletStore.loadAccounts();
+  });
 });
+
 const activeAccount = toRef(walletStore, "activeAccount");
 const activeAccountString = computed(() => {
   if (!activeAccount.value) return "";
