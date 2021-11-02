@@ -8,8 +8,19 @@
       <div class="flex items-center">
         <p class="text-base font-medium text-gray-900">连接 Metamask</p>
       </div>
-      <img width="32" src="@/assets/wallets/metamask.png" />
+      <img class="logo" src="@/assets/wallets/metamask.png" />
     </a>
+
+    <!-- <a
+      href="#"
+      class="p-3 flex justify-between rounded-lg bg-gray-100 hover:bg-gray-200"
+      @click.stop="handleConnectWallet('ronin')"
+    >
+      <div class="flex items-center">
+        <p class="text-base font-medium text-gray-900">连接 Ronin Wallet</p>
+      </div>
+      <img class="logo" src="@/assets/wallets/ronin.png" />
+    </a> -->
   </div>
 </template>
 
@@ -28,3 +39,9 @@ const handleConnectWallet = async (wallet: string) => {
   emit("connected", wallet);
 };
 </script>
+
+<style scoped>
+.logo {
+  height: 30px;
+}
+</style>

@@ -31,7 +31,7 @@
             sm:items-stretch sm:justify-start
           "
         >
-          <div class="hidden sm:block sm:ml-6">
+          <div class="sm:ml-6">
             <div class="flex space-x-4">
               <a
                 v-if="!activeAccount"
@@ -51,9 +51,8 @@
                 连接钱包
               </a>
 
-              <a
+              <button
                 v-else
-                href="#"
                 class="
                   text-gray-300
                   border-solid border border-gray-400
@@ -66,7 +65,7 @@
                 "
               >
                 {{ activeAccountString }}
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -148,6 +147,7 @@ import {
 import WalletConnect from "./WalletConnect.vue";
 import { useWalletStore } from "@/store";
 import { hasConnectedAddress, onEvent } from "@/utils/web3";
+import { hideStr } from "@/utils";
 
 const props = withDefaults(
   defineProps<{
@@ -184,9 +184,7 @@ const activeAccount = toRef(walletStore, "activeAccount");
 const activeAccountString = computed(() => {
   if (!activeAccount.value) return "";
 
-  return (
-    activeAccount.value.substr(0, 6) + "..." + activeAccount.value.substr(-4)
-  );
+  return hideStr(activeAccount.value);
 });
 </script>
 

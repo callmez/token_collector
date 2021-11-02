@@ -1,12 +1,18 @@
-import { isEthereumAddress, toDecimalValue } from "@/utils";
+import { fromDecimalValue, isEthereumAddress, toDecimalValue } from "@/utils";
 import { defineStore } from "pinia";
+import { AbiItem } from "web3-utils";
+import ERC20 from "@/utils/abi/ERC20.json";
+import TokenCollector from "@/utils/abi/TokenCollector.json";
 import Web3 from "web3/dist/web3.min.js";
 import {
   contractCall,
   getAccounts,
-  getERC20Contract,
+  getChainID,
+  getContract,
   getWeb3,
+  setWalletProvider,
 } from "../utils/web3";
+import { useLoadingStore } from "./plugins/loading";
 
 export interface Token {
   address: string;
@@ -17,11 +23,23 @@ export interface Token {
   decimals: number;
 }
 
+export interface Contract {
+  address: string;
+  contract: Web3.eth.Contract;
+}
+
 export interface WalletState {
+  chainID?: number;
   originalWeb3?: Web3;
   accounts: string[];
+  contracts: {
+    [address: string]: Contract;
+  };
   tokens: {
     [address: string]: Token;
+  };
+  balances: {
+    [key: string]: number;
   };
 }
 
@@ -30,7 +48,9 @@ export const useWalletStore = defineStore({
   state: (): WalletState => ({
     originalWeb3: undefined,
     accounts: [],
+    contracts: {},
     tokens: {},
+    balances: {},
   }),
   getters: {
     web3(state) {
@@ -42,8 +62,18 @@ export const useWalletStore = defineStore({
   },
   actions: {
     async connectWallet(wallet: string) {
+      setWalletProvider(wallet);
+
       await this.loadAccounts();
       return true;
+    },
+
+    async loadChainID({ force = false }: { force?: boolean } = {}) {
+      if (this.chainID === undefined || force) {
+        this.chainID = (await getChainID()) || 0;
+      }
+
+      return this.chainID;
     },
     async loadWeb3() {
       if (!this.originalWeb3) {
@@ -77,9 +107,33 @@ export const useWalletStore = defineStore({
       return tokens;
     },
 
+    async loadContract({
+      address,
+      abi,
+      force,
+    }: {
+      address: string;
+      abi: AbiItem | AbiItem[];
+      force?: boolean;
+    }) {
+      if (!this.contracts[address] || force) {
+        const contract = await getContract(address, abi);
+
+        this.contracts[address] = {
+          address,
+          contract,
+        };
+      }
+
+      return this.contracts[address];
+    },
+
     async loadToken({ address, force }: { address: string; force?: boolean }) {
       if (!this.tokens[address] || force) {
-        const contract = await getERC20Contract(address);
+        const { contract } = await this.loadContract({
+          address,
+          abi: ERC20 as AbiItem[],
+        });
 
         this.tokens[address] = {
           address,
@@ -94,27 +148,103 @@ export const useWalletStore = defineStore({
       return this.tokens[address];
     },
     async approve({
-      tokenAddress,
+      token,
       spender,
       amount,
     }: {
-      tokenAddress: string;
+      token: string;
       spender: string;
       amount: number | string;
     }) {
       const { contract, decimals } = await this.loadToken({
-        address: tokenAddress,
+        address: token,
       });
       const value = toDecimalValue(amount, decimals).toString();
 
-      const tx = await contractCall(
+      const tx = await contractCall({
         contract,
-        "approve",
-        [spender, value],
-        this.activeAccount
-      );
+        method: "approve",
+        params: [spender, value],
+        from: this.activeAccount,
+
+        send: true,
+      });
 
       return tx;
+    },
+
+    async loadBalance({ token, owner }: { token: string; owner: string }) {
+      const key = `loadBalance:${token}_${owner}`;
+
+      return useLoadingStore().loadingWith(key, async () => {
+        const { contract, decimals } = await this.loadToken({
+          address: token,
+        });
+
+        const balanceAmount = await contractCall({
+          contract,
+          method: "balanceOf",
+          params: [owner],
+          from: this.activeAccount,
+        });
+        const balance = fromDecimalValue(balanceAmount, decimals).toNumber();
+
+        this.balances = {
+          [`${token}_${owner}`]: balance,
+          ...this.balances,
+        };
+
+        return balance;
+      });
+    },
+
+    async loadAllowance({
+      token,
+      owner,
+      spender,
+    }: {
+      token: string;
+      owner: string;
+      spender: string;
+    }) {
+      const { contract, decimals } = await this.loadToken({
+        address: token,
+      });
+
+      const allowanceAmount = await contractCall({
+        contract,
+        method: "allowance",
+        params: [owner, spender],
+        from: this.activeAccount,
+      });
+
+      return fromDecimalValue(allowanceAmount, decimals).toNumber();
+    },
+
+    async contractCall({
+      contract: contractAddress,
+      method,
+      params,
+      send = false,
+    }: {
+      contract: string;
+      method: string;
+      params: any;
+      send?: boolean;
+    }) {
+      const { contract } = await this.loadContract({
+        address: contractAddress,
+        abi: TokenCollector as AbiItem[],
+      });
+
+      return contractCall({
+        contract,
+        method,
+        params,
+        from: this.activeAccount,
+
+        send,
+      });
     },
   },
 });

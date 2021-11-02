@@ -17,6 +17,15 @@ export const useLoadingStore = defineStore({
     triggerLoading(name: string, value?: boolean) {
       this.loading[name] = value !== undefined ? value : this.loading[name];
     },
+
+    async loadingWith<T>(name: string, callback: () => Promise<T>) {
+      try {
+        this.triggerLoading(name, true);
+        return await callback();
+      } finally {
+        this.triggerLoading(name, false);
+      }
+    },
   },
 });
 
